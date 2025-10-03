@@ -55,77 +55,88 @@ fun GameScreen(username: String, viewModel: GameViewModel) {
     val soundPlayer = remember { SoundPlayer }
 
     LaunchedEffect(uiState.gameState) {
-        when (uiState.gameState) {
-            GameState.WON -> soundPlayer.playVictorySound()
-            GameState.LOST -> soundPlayer.playLossSound()
-            GameState.PLAYING -> { }
+        if (!uiState.celebrationComplete) {
+            when (uiState.gameState) {
+                GameState.WON -> {
+                    soundPlayer.playVictorySound()
+                    viewModel.markCelebrationComplete()
+                }
+
+                GameState.LOST -> {
+                    soundPlayer.playLossSound()
+                    viewModel.markCelebrationComplete()
+                }
+
+                GameState.PLAYING -> {}
+            }
         }
     }
 
-    if (uiState.gameState == GameState.WON) {
-        ConfettiKit(
-            modifier = Modifier.fillMaxSize(),
-            parties = listOf(
-                Party(emitter = Emitter(duration = 5.seconds).perSecond(30))
-            )
-        )
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        if (uiState.showEndGameDialog) {
-            GameEndDialog(
-                uiState = uiState,
-                onClose = viewModel::hideEndGameDialog,
-            )
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .focusRequester(focusRequester)
-                .focusable()
-                .onKeyEvent { event ->
-                    if (event.type == KeyEventType.KeyDown) {
-                        when (event.key) {
-                            Key.Enter -> {
-                                viewModel.onSubmitClick()
-                                true
-                            }
-
-                            Key.Backspace -> {
-                                viewModel.onDeleteClick()
-                                true
-                            }
-
-                            else -> {
-                                val char = event.utf16CodePoint.toChar().uppercaseChar()
-                                if (char in 'A'..'Z') {
-                                    viewModel.onLetterClick(char)
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .focusRequester(focusRequester)
+                    .focusable()
+                    .onKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyDown) {
+                            when (event.key) {
+                                Key.Enter -> {
+                                    viewModel.onSubmitClick()
                                     true
-                                } else {
-                                    false
+                                }
+
+                                Key.Backspace -> {
+                                    viewModel.onDeleteClick()
+                                    true
+                                }
+
+                                else -> {
+                                    val char = event.utf16CodePoint.toChar().uppercaseChar()
+                                    if (char in 'A'..'Z') {
+                                        viewModel.onLetterClick(char)
+                                        true
+                                    } else {
+                                        false
+                                    }
                                 }
                             }
+                        } else {
+                            false
                         }
-                    } else {
-                        false
-                    }
-                },
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Sort, $username!", style = MaterialTheme.typography.headlineSmall)
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Sort, $username!", style = MaterialTheme.typography.headlineSmall)
 
-            GameGrid(uiState)
+                GameGrid(uiState)
 
-            VirtualKeyboard(
-                keyboardState = uiState.keyboardLetterStates,
-                onLetterClick = { viewModel.onLetterClick(it) },
-                onDeleteClick = { viewModel.onDeleteClick() },
-                onSubmitClick = { viewModel.onSubmitClick() }
-            )
+                VirtualKeyboard(
+                    keyboardState = uiState.keyboardLetterStates,
+                    onLetterClick = { viewModel.onLetterClick(it) },
+                    onDeleteClick = { viewModel.onDeleteClick() },
+                    onSubmitClick = { viewModel.onSubmitClick() }
+                )
+            }
+
+            if (uiState.gameState == GameState.WON && !uiState.celebrationComplete) {
+                ConfettiKit(
+                    modifier = Modifier.fillMaxSize(),
+                    parties = listOf(
+                        Party(emitter = Emitter(duration = 5.seconds).perSecond(30))
+                    )
+                )
+            }
+
+            if (uiState.showEndGameDialog) {
+                GameEndDialog(
+                    uiState = uiState,
+                    onClose = viewModel::hideEndGameDialog,
+                )
+            }
         }
     }
 }

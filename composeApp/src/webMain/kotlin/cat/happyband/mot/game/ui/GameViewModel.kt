@@ -104,6 +104,10 @@ class GameViewModel {
         uiState = uiState.copy(showEndGameDialog = false)
     }
 
+    fun markCelebrationComplete() {
+        uiState = uiState.copy(celebrationComplete = true)
+    }
+
     private fun updateKeyboardState(guesses: List<List<EvaluatedLetter>>): Map<Char, LetterState> {
         val newStates = mutableMapOf<Char, LetterState>()
 
@@ -131,4 +135,5 @@ data class GameUiState(
     val showEndGameDialog: Boolean = false,
     val finalScore: Int = 0,
     val timeSpentSeconds: Long = 0,
+    val celebrationComplete: Boolean = false
 )
