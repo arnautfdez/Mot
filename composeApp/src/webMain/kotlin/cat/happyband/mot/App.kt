@@ -37,7 +37,7 @@ fun App() {
                         )
                     }
                     MotScreen.STATS -> {
-                        StatsScreen()
+                        StatsScreen(loginState.username)
                     }
                 }
             }
