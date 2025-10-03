@@ -29,6 +29,8 @@ fun GameEndDialog(
             Column {
                 if (isWon) {
                     Text("Ho has aconseguit! La teva partida ha estat guardada.")
+                    Text("Has trigat ${uiState.timeSpentSeconds} segons.")
+                    Text("Puntuació: ${uiState.finalScore}")
                 } else {
                     Text("Has esgotat els 6 intents.")
                     Spacer(modifier = Modifier.height(8.dp))

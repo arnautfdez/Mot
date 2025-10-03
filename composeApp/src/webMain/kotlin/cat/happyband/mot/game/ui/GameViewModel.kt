@@ -7,14 +7,21 @@ import cat.happyband.mot.game.domain.EvaluatedLetter
 import cat.happyband.mot.game.domain.LetterState
 import cat.happyband.mot.game.domain.evaluateGuess
 import cat.happyband.mot.game.domain.getDailyWord
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 enum class GameState { PLAYING, WON, LOST }
 
+@OptIn(ExperimentalTime::class)
 class GameViewModel {
     var uiState by mutableStateOf(GameUiState())
         private set
 
+    private val isTimeBonusEnabled = true
+    private var startTime: Long = 0
+
     init {
+        startTime = Clock.System.now().toEpochMilliseconds()
         newGame()
     }
 
@@ -46,6 +53,36 @@ class GameViewModel {
         val hasWon = result.all { it.state == LetterState.CORRECT }
         val hasLost = newGuesses.size == 6 && !hasWon
 
+        val finalScore: Int
+        val timeSpentSeconds: Long
+
+        if (hasWon) {
+            val endTime = Clock.System.now().toEpochMilliseconds()
+            val durationMs = endTime - startTime
+            timeSpentSeconds = durationMs / 1000
+
+            // 1. PUNTS PER INTENTS (Base 700 punts, recompensa l'eficiència)
+            val attemptsUsed = newGuesses.size
+            val scoreAttempts = (7 - attemptsUsed) * 100
+
+            // 2. BONUS PER VELOCITAT (Màxim 300 punts, Mínim 0)
+            val scoreTimeBonus = if (isTimeBonusEnabled) {
+                // Formula: max(0, 360 - Temps en Segons)
+                val potentialTimeScore = 360 - timeSpentSeconds.toInt()
+                // Assegurem que el bonus mai supera 300 punts i mai és negatiu
+                minOf(300, maxOf(0, potentialTimeScore))
+            } else {
+                0
+            }
+
+            // 3. PUNTS TOTALS
+            finalScore = scoreAttempts + scoreTimeBonus
+
+        } else {
+            finalScore = 0
+            timeSpentSeconds = 0
+        }
+
         val newGameState = when {
             hasWon -> GameState.WON
             hasLost -> GameState.LOST
@@ -58,6 +95,8 @@ class GameViewModel {
             gameState = newGameState,
             keyboardLetterStates = newKeyboardState,
             showEndGameDialog = newGameState == GameState.WON || newGameState == GameState.LOST,
+            finalScore = finalScore,
+            timeSpentSeconds = timeSpentSeconds
         )
     }
 
@@ -89,5 +128,7 @@ data class GameUiState(
     val currentGuess: String = "",
     val gameState: GameState = GameState.PLAYING,
     val keyboardLetterStates: Map<Char, LetterState> = emptyMap(),
-    val showEndGameDialog: Boolean = false
+    val showEndGameDialog: Boolean = false,
+    val finalScore: Int = 0,
+    val timeSpentSeconds: Long = 0,
 )
