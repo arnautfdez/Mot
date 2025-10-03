@@ -26,7 +26,7 @@ fun LoginScreen(viewModel: LoginViewModel) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Benvingut al Joc del Mtttt!", style = MaterialTheme.typography.titleLarge)
+        Text("El Mot No Oficial", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(24.dp))
 
         TextField(
