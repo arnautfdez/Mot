@@ -1,4 +1,4 @@
-package cat.happyband.mot.ui.login
+package cat.happyband.mot.login.ui
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

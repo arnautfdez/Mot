@@ -24,6 +24,9 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.kotlinx.datetime)
+            implementation("io.github.vinceglb:confettikit:0.6.0")
+            implementation("media.kamel:kamel-image-default:1.0.8")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -1,4 +1,4 @@
-package cat.happyband.mot.ui.login
+package cat.happyband.mot.login.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cat.happyband.mot.ui.theme.MotAppTheme
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel) {
