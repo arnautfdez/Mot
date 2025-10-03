@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +22,8 @@ import cat.happyband.mot.utils.roundToDecimals
 
 @Composable
 fun StatsScreen(currentUser: String) {
-    val dummyState = remember { createDummyStats(currentUser) }
+    val viewModel = remember { StatsViewModel(currentUser) }
+    val uiState by viewModel.uiState.collectAsState()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -40,14 +43,14 @@ fun StatsScreen(currentUser: String) {
         item {
             Text("El meu Rendiment", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(8.dp))
-            PersonalStatsCard(stats = dummyState.personalStats)
+            PersonalStatsCard(stats = uiState.personalStats)
             Spacer(Modifier.height(32.dp))
         }
 
         item {
             Text("Distribució d'Intents", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(8.dp))
-            IntentDistributionChart(distribution = dummyState.personalStats.distribution)
+            IntentDistributionChart(distribution = uiState.personalStats.distribution)
             Spacer(Modifier.height(32.dp))
         }
 
@@ -57,7 +60,7 @@ fun StatsScreen(currentUser: String) {
             RankingHeader()
         }
 
-        items(dummyState.ranking) { item ->
+        items(uiState.ranking) { item ->
             RankingRow(item, isCurrentUser = item.username == currentUser)
             Divider(color = Color.LightGray)
         }
@@ -70,8 +73,6 @@ fun PersonalStatsCard(stats: PersonalStats) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceAround) {
             StatItem("Jugades", stats.gamesPlayed.toString())
             StatItem("Intents Mitjans", stats.averageGuesses.roundToDecimals(2).toString())
-            StatItem("Ratxa Actual", stats.currentStreak.toString())
-            StatItem("Ratxa Màxima", stats.maxStreak.toString())
         }
     }
 }
@@ -192,36 +193,30 @@ fun createDummyStats(currentUser: String): StatsUiState {
             username = "Arnau",
             score = 1500,
             averageGuesses = 3.2.roundToDecimals(2),
-            currentStreak = 10
         ),
         GlobalRankItem(
             rank = 2,
             username = "Laura",
             score = 1200,
             averageGuesses = 3.5.roundToDecimals(2),
-            currentStreak = 5
         ),
         GlobalRankItem(
             rank = 3,
             username = "Pere",
             score = 800,
             averageGuesses = 4.1.roundToDecimals(2),
-            currentStreak = 2
         ),
         GlobalRankItem(
             rank = 4,
             username = "Maria",
             score = 600,
             averageGuesses = 4.8.roundToDecimals(2),
-            currentStreak = 0
         ),
     ).sortedByDescending { it.score }
 
     val personal = PersonalStats(
         gamesPlayed = 12,
         averageGuesses = 3.4.roundToDecimals(2),
-        currentStreak = 10,
-        maxStreak = 10,
         distribution = listOf(1, 2, 4, 3, 0, 2)
     )
 
