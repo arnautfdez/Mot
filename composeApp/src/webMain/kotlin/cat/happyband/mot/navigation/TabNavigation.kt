@@ -15,8 +15,8 @@ fun TabNavigation(onScreenSelected: (MotScreen) -> Unit) {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     val screens = listOf(
-        MotScreen.GAME to "Joc del Mot",
-        MotScreen.STATS to "Rànquing"
+        MotScreen.GAME to "Joc",
+        MotScreen.STATS to "Estadístiques"
     )
 
     TabRow(selectedTabIndex = selectedTabIndex) {

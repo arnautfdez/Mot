@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,38 +32,45 @@ fun StatsScreen(currentUser: String) {
         contentPadding = PaddingValues(bottom = 80.dp)
     ) {
 
-        item {
-            Text(
-                "Estadístiques del Mot",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(Modifier.height(16.dp))
-        }
+        if (uiState.isLoading) {
+            item {
+                StatsSkeleton()
+            }
+        } else {
 
-        item {
-            Text("El meu Rendiment", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(8.dp))
-            PersonalStatsCard(stats = uiState.personalStats)
-            Spacer(Modifier.height(32.dp))
-        }
+            item {
+                Text(
+                    "Estadístiques del Mot",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(16.dp))
+            }
 
-        item {
-            Text("Distribució d'Intents", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(8.dp))
-            IntentDistributionChart(distribution = uiState.personalStats.distribution)
-            Spacer(Modifier.height(32.dp))
-        }
+            item {
+                Text("El meu Rendiment", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(8.dp))
+                PersonalStatsCard(stats = uiState.personalStats)
+                Spacer(Modifier.height(32.dp))
+            }
 
-        item {
-            Text("Rànquing Global", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(8.dp))
-            RankingHeader()
-        }
+            item {
+                Text("Distribució d'Intents", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(8.dp))
+                IntentDistributionChart(distribution = uiState.personalStats.distribution)
+                Spacer(Modifier.height(32.dp))
+            }
 
-        items(uiState.ranking) { item ->
-            RankingRow(item, isCurrentUser = item.username == currentUser)
-            Divider(color = Color.LightGray)
+            item {
+                Text("Rànquing Global", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(8.dp))
+                RankingHeader()
+            }
+
+            items(uiState.ranking) { item ->
+                RankingRow(item, isCurrentUser = item.username == currentUser)
+                HorizontalDivider(Modifier, DividerDefaults.Thickness, color = Color.LightGray)
+            }
         }
     }
 }
