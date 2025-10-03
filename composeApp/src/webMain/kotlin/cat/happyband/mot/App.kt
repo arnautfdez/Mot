@@ -28,7 +28,7 @@ fun App() {
         } else {
             Column {
                 TabNavigation(onScreenSelected = { currentScreen = it })
-                val gameViewModel = remember { GameViewModel() }
+                val gameViewModel = remember { GameViewModel(loginState.username) }
                 when (currentScreen) {
                     MotScreen.GAME -> {
                         GameScreen(

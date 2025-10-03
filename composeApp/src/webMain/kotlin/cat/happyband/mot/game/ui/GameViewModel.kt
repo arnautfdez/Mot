@@ -3,22 +3,28 @@ package cat.happyband.mot.game.ui
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import cat.happyband.mot.game.data.GameRepository
 import cat.happyband.mot.game.domain.EvaluatedLetter
+import cat.happyband.mot.game.domain.GameResult
 import cat.happyband.mot.game.domain.LetterState
 import cat.happyband.mot.game.domain.evaluateGuess
 import cat.happyband.mot.game.domain.getDailyWord
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 
 enum class GameState { PLAYING, WON, LOST }
 
-@OptIn(ExperimentalTime::class)
-class GameViewModel {
+class GameViewModel(private val currentUsername: String) {
     var uiState by mutableStateOf(GameUiState())
         private set
 
     private val isTimeBonusEnabled = true
     private var startTime: Long = 0
+
+    private val repository = GameRepository()
+    private val viewModelScope = CoroutineScope(Dispatchers.Default)
 
     init {
         startTime = Clock.System.now().toEpochMilliseconds()
@@ -42,6 +48,7 @@ class GameViewModel {
     }
 
     fun onSubmitClick() {
+        println("DEBUG: Entering onSubmitClick")
         if (uiState.currentGuess.length != uiState.solution.length || uiState.gameState != GameState.PLAYING) {
             return
         }
@@ -87,6 +94,22 @@ class GameViewModel {
             hasWon -> GameState.WON
             hasLost -> GameState.LOST
             else -> GameState.PLAYING
+        }
+
+        if (newGameState == GameState.WON || newGameState == GameState.LOST) {
+            println("DEBUG: Entering save block for user ${currentUsername}")
+            val gameResult = GameResult(
+                username = currentUsername,
+                solved = hasWon,
+                attempts = newGuesses.size,
+                score = finalScore,
+                timeSpentSeconds = timeSpentSeconds
+            )
+
+            viewModelScope.launch {
+                repository.saveGameResult(gameResult)
+                println("INFO: Game result for $currentUsername saved to Supabase.")
+            }
         }
 
         uiState = uiState.copy(

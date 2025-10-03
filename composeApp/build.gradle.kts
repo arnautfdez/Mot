@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    kotlin("plugin.serialization") version "2.0.0"
 }
 
 kotlin {
@@ -26,8 +27,11 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.datetime)
             implementation("io.github.vinceglb:confettikit:0.6.0")
-            implementation("media.kamel:kamel-image-default:1.0.8")
+
+            implementation(libs.bundles.ktor.common)
+            implementation("io.ktor:ktor-client-logging:2.3.8")
         }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
