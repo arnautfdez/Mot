@@ -26,7 +26,7 @@ jobs:
           node-version: '20' # Versió compatible amb el teu Wasm/Gradle
 
 
-      - name: Inject Supabase Secrets for Build # NOU PAS CRUCIAL!
+      - name: Inject Supabase Secrets for Build
         run: |
           mkdir -p composeApp/src/commonMain/kotlin/cat/happyband/mot/data
           echo "package cat.happyband.mot.data" > composeApp/src/commonMain/kotlin/cat/happyband/mot/data/Config.kt
@@ -48,5 +48,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Ruta on Gradle ha posat els teus fitxers de producció
           publish_dir: ./composeApp/build/dist/wasmJs/productionExecutable
+          git_config_name: arnautfdez
+          git_config_email: arnau.torrents.fernandez@gmail.com
           # Per garantir que sempre es fa un clean deploy
           force_orphan: true
