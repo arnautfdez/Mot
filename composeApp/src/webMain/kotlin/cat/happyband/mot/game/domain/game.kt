@@ -3,17 +3,23 @@ package cat.happyband.mot.game.domain
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import mot.composeapp.generated.resources.Res
 
-private val words = listOf(
-    "CASAS", "TAULA", "COTXE", "PORTA", "LLUNA", "FORCA", "ANELL", "PIANO",
-    "HOTEL", "JUGAR", "ACTOR", "FESTA", "PLATJA", "AIGUA", "PEIX", "GAT", "RIURE"
-)
+suspend fun loadWordList(): List<String> {
+    val rawTextBytes = Res.readBytes("files/paraules5.txt")
+    val text = rawTextBytes.decodeToString()
+    return text.split("\n")
+}
 
-fun getDailyWord(): String {
+fun getDailyWord(wordList: List<String>): String {
+    if (wordList.isEmpty()) return "ERROR"
+
     val now = Clock.System.now()
     val dayOfYear = now.toLocalDateTime(TimeZone.currentSystemDefault()).dayOfYear
-    val index = dayOfYear % words.size
-    return words[index]
+
+    val index = dayOfYear % wordList.size
+
+    return wordList[index]
 }
 
 enum class LetterState(val priority: Int) {
@@ -29,7 +35,8 @@ data class EvaluatedLetter(val char: Char, val state: LetterState)
 
 // La funció principal que comprova un intent contra la solució
 fun evaluateGuess(intent: String, paraulaCorrecta: String): List<EvaluatedLetter> {
-    val resultat = MutableList(paraulaCorrecta.length) { EvaluatedLetter(intent[it], LetterState.ABSENT) }
+    val resultat =
+        MutableList(paraulaCorrecta.length) { EvaluatedLetter(intent[it], LetterState.ABSENT) }
     val lletresCorrectesComptador = paraulaCorrecta.groupingBy { it }.eachCount().toMutableMap()
 
     // 1a passada: Marcar les lletres correctes (verdes)
@@ -42,7 +49,9 @@ fun evaluateGuess(intent: String, paraulaCorrecta: String): List<EvaluatedLetter
 
     // 2a passada: Marcar les lletres presents (grogues)
     intent.forEachIndexed { index, char ->
-        if (resultat[index].state != LetterState.CORRECT && (lletresCorrectesComptador[char] ?: 0) > 0) {
+        if (resultat[index].state != LetterState.CORRECT && (lletresCorrectesComptador[char]
+                ?: 0) > 0
+        ) {
             resultat[index] = resultat[index].copy(state = LetterState.PRESENT)
             lletresCorrectesComptador[char] = lletresCorrectesComptador.getValue(char) - 1
         }

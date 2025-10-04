@@ -30,6 +30,7 @@ kotlin {
 
             implementation(libs.bundles.ktor.common)
             implementation("io.ktor:ktor-client-logging:2.3.8")
+            implementation("org.jetbrains.compose.components:components-resources")
         }
 
         commonTest.dependencies {

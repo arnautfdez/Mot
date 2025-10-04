@@ -9,6 +9,7 @@ import cat.happyband.mot.game.domain.GameResult
 import cat.happyband.mot.game.domain.LetterState
 import cat.happyband.mot.game.domain.evaluateGuess
 import cat.happyband.mot.game.domain.getDailyWord
+import cat.happyband.mot.game.domain.loadWordList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,12 +27,22 @@ class GameViewModel(private val currentUsername: String) {
     private val repository = GameRepository()
     private val viewModelScope = CoroutineScope(Dispatchers.Default)
 
-    private val dailyWord = getDailyWord()
+    private var loadedWordList: List<String> = emptyList()
 
     init {
         startTime = Clock.System.now().toEpochMilliseconds()
-        uiState = uiState.copy(solution = dailyWord)
-        loadInitialGameState()
+        loadDictionaryAndInitGame()
+    }
+
+    fun loadDictionaryAndInitGame() {
+        viewModelScope.launch {
+            loadedWordList = loadWordList()
+
+            val word = getDailyWord(loadedWordList)
+            uiState = uiState.copy(solution = word)
+
+            loadInitialGameState()
+        }
     }
 
     fun loadInitialGameState() {
@@ -68,7 +79,7 @@ class GameViewModel(private val currentUsername: String) {
 
     private fun reconstructGuesses(result: GameResult): List<List<EvaluatedLetter>> {
         // Per evitar errors de compilació, retornarem l'estat final amb el nombre d'intents correctes
-        val solution = dailyWord
+        val solution = uiState.solution
         val numAttempts = result.attempts
 
         return List(numAttempts) { index ->
@@ -96,6 +107,11 @@ class GameViewModel(private val currentUsername: String) {
     fun onSubmitClick() {
         println("DEBUG: Entering onSubmitClick")
         if (uiState.currentGuess.length != uiState.solution.length || uiState.gameState != GameState.PLAYING) {
+            return
+        }
+
+        if (!loadedWordList.contains(uiState.currentGuess)) {
+            // NOTA: Pots afegir un error a la UI, per exemple: uiState.copy(error = "Paraula no vàlida")
             return
         }
 
