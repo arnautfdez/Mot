@@ -2,9 +2,8 @@ package cat.happyband.mot.game.data
 
 import cat.happyband.mot.data.SUPABASE_ANON_KEY
 import cat.happyband.mot.data.SUPABASE_URL
-import cat.happyband.mot.data.TABLE_NAME
-import cat.happyband.mot.game.domain.GameResult
 import cat.happyband.mot.data.httpClient
+import cat.happyband.mot.game.domain.GameResult
 import cat.happyband.mot.utils.getStartOfDayISO
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -15,7 +14,8 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
-import kotlinx.datetime.Clock
+
+const val TABLE_NAME = "mot_results"
 
 class GameRepository {
 

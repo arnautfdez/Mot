@@ -28,6 +28,9 @@ jobs:
       # 2. Executar la tasca de producció de Gradle
       - name: Build WasmJs Distribution
         run: ./gradlew wasmJsBrowserDistribution
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
       # 3. Desplegar els fitxers construïts a la branca gh-pages
       - name: Deploy to GitHub Pages

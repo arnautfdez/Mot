@@ -38,4 +38,21 @@ kotlin {
     }
 }
 
+tasks.register<Exec>("generateConfig") {
+    // Aquesta tasca es crea per executar-se SEMPRE abans de la compilació
+    // Llegeix les variables d'entorn i crea el fitxer Config.kt
+    workingDir = file("${project.projectDir}/src/commonMain/kotlin/cat/happyband/mot/data")
+    commandLine("bash", "-c", """
+        echo "package cat.happyband.mot.data" > Config.kt
+        echo "const val SUPABASE_URL = \"${System.getenv("SUPABASE_URL")}\"" >> Config.kt
+        echo "const val SUPABASE_ANON_KEY = \"${System.getenv("SUPABASE_ANON_KEY")}\"" >> Config.kt
+        echo "const val TABLE_NAME = \"mot_results\"" >> Config.kt
+    """.trimIndent())
+}
+
+// Fes que la tasca de compilació depengui d'aquesta generació
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    dependsOn("generateConfig")
+}
+
 
