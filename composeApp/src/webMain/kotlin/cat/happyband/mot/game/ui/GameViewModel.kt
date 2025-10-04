@@ -26,13 +26,59 @@ class GameViewModel(private val currentUsername: String) {
     private val repository = GameRepository()
     private val viewModelScope = CoroutineScope(Dispatchers.Default)
 
+    private val dailyWord = getDailyWord()
+
     init {
         startTime = Clock.System.now().toEpochMilliseconds()
-        newGame()
+        uiState = uiState.copy(solution = dailyWord)
+        loadInitialGameState()
     }
 
-    fun newGame() {
-        uiState = GameUiState(solution = getDailyWord())
+    fun loadInitialGameState() {
+        viewModelScope.launch {
+
+            val latestResult = repository.getLatestResultForUser(currentUsername)
+
+            if (latestResult != null) {
+                // L'usuari ha jugat avui. Carreguem l'estat FINAL.
+
+                // NOTA: Cal la funció de reconstrucció de tauler (reconstructGuesses)
+                val finalGuesses = reconstructGuesses(latestResult)
+                val finalKeyboardState = updateKeyboardState(finalGuesses)
+
+                uiState = uiState.copy(
+                    // IMPORTANT: La paraula ha de ser la mateixa del resultat, si la vas guardar!
+                    // Si no vas guardar la paraula al GameResult, la deixem amb la del dia.
+                    // solution = latestResult.word,
+                    guesses = finalGuesses,
+                    keyboardLetterStates = finalKeyboardState,
+                    gameState = if (latestResult.solved) GameState.WON else GameState.LOST,
+                    finalScore = latestResult.score,
+                    timeSpentSeconds = latestResult.timeSpentSeconds,
+                    celebrationComplete = true // Ja va celebrar, no cal repetir
+                )
+            } else {
+                uiState = uiState.copy(gameState = GameState.PLAYING)
+            }
+            // Si no ha jugat avui, el joc es manté en estat PLAYING per defecte (newGame)
+
+            uiState = uiState.copy(isLoadingGame = false)
+        }
+    }
+
+    private fun reconstructGuesses(result: GameResult): List<List<EvaluatedLetter>> {
+        // Per evitar errors de compilació, retornarem l'estat final amb el nombre d'intents correctes
+        val solution = dailyWord
+        val numAttempts = result.attempts
+
+        return List(numAttempts) { index ->
+            // Simulem que només l'última fila es completa amb l'estat final (VERD o ABSENT/PRESENT)
+            if (index == numAttempts - 1) {
+                evaluateGuess(solution, solution)
+            } else {
+                List(solution.length) { EvaluatedLetter(' ', LetterState.PENDING) }
+            }
+        }
     }
 
     fun onLetterClick(lletra: Char) {
@@ -158,5 +204,6 @@ data class GameUiState(
     val showEndGameDialog: Boolean = false,
     val finalScore: Int = 0,
     val timeSpentSeconds: Long = 0,
-    val celebrationComplete: Boolean = false
+    val celebrationComplete: Boolean = false,
+    val isLoadingGame: Boolean = true,
 )
