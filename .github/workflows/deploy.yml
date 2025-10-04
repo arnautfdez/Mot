@@ -25,6 +25,15 @@ jobs:
         with:
           node-version: '20' # Versió compatible amb el teu Wasm/Gradle
 
+
+      - name: Inject Supabase Secrets for Build # NOU PAS CRUCIAL!
+        run: |
+          mkdir -p composeApp/src/commonMain/kotlin/cat/happyband/mot/data
+          echo "package cat.happyband.mot.data" > composeApp/src/commonMain/kotlin/cat/happyband/mot/data/Config.kt
+          echo "const val SUPABASE_URL = \"${{ secrets.SUPABASE_URL }}\"" >> composeApp/src/commonMain/kotlin/cat/happyband/mot/data/Config.kt
+          echo "const val SUPABASE_ANON_KEY = \"${{ secrets.SUPABASE_ANON_KEY }}\"" >> composeApp/src/commonMain/kotlin/cat/happyband/mot/data/Config.kt
+          echo "const val TABLE_NAME = \"mot_results\"" >> composeApp/src/commonMain/kotlin/cat/happyband/mot/data/Config.kt
+
       # 2. Executar la tasca de producció de Gradle
       - name: Build WasmJs Distribution
         run: ./gradlew wasmJsBrowserDistribution
