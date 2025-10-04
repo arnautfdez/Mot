@@ -125,9 +125,10 @@ fun RankingRow(item: GlobalRankItem, isCurrentUser: Boolean) {
 
 @Composable
 fun IntentDistributionChart(distribution: List<Int>) {
-    val maxWins = distribution.maxOrNull() ?: 1
-    val baseColor = Color(0xFF6AAA64)
-    val totalAttempts = 6
+    val maxFactor = distribution.maxOrNull() ?: 1
+    val winColor = Color(0xFF6AAA64)
+    val failColor = Color.DarkGray
+    val totalAttempts = 7
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -135,8 +136,16 @@ fun IntentDistributionChart(distribution: List<Int>) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            (1..totalAttempts).forEach { attempts ->
-                val winsForAttempt = distribution.getOrNull(attempts - 1) ?: 0
+            (1..totalAttempts).forEach { attemptsIndex ->
+                val winsForAttempt = distribution.getOrNull(attemptsIndex - 1) ?: 0
+
+                val (color, label) = when (attemptsIndex) {
+                    7 -> failColor to "X"
+                    else -> winColor to attemptsIndex.toString()
+                }
+
+                val barWidthFraction =
+                    if (maxFactor > 0) winsForAttempt.toFloat() / maxFactor.toFloat() else 0f
 
                 Row(
                     modifier = Modifier
@@ -145,16 +154,13 @@ fun IntentDistributionChart(distribution: List<Int>) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = attempts.toString(),
+                        text = label,
                         modifier = Modifier.width(20.dp),
                         fontWeight = FontWeight.Bold,
                         color = Color.Gray
                     )
 
                     Spacer(Modifier.width(4.dp))
-
-                    val barWidthFraction =
-                        if (maxWins > 0) winsForAttempt.toFloat() / maxWins.toFloat() else 0f
 
                     Box(
                         modifier = Modifier
@@ -167,7 +173,7 @@ fun IntentDistributionChart(distribution: List<Int>) {
                                 .fillMaxHeight()
                                 .fillMaxWidth(fraction = barWidthFraction)
                                 .background(
-                                    color = baseColor,
+                                    color = color,
                                     shape = RoundedCornerShape(
                                         topStart = 0.dp,
                                         bottomStart = 0.dp,

@@ -47,7 +47,10 @@ class StatsRepository {
 
         val distribution = (1..6).map { attempts ->
             personalResults.count { it.solved && it.attempts == attempts }
-        }
+        }.toMutableList()
+        val failedGames = personalResults.count { !it.solved }
+        distribution.add(failedGames)
+
 
         return PersonalStats(
             gamesPlayed = personalResults.size,
