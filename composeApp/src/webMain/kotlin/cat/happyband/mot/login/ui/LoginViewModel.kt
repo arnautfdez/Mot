@@ -1,38 +1,51 @@
 package cat.happyband.mot.login.ui
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import cat.happyband.mot.login.data.AuthRepository
+import cat.happyband.mot.login.data.getSessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel {
-    var uiState by mutableStateOf(LoginUiState())
-        private set
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     private val authRepository = AuthRepository()
     private val viewModelScope = CoroutineScope(Dispatchers.Default)
 
+    private val sessionManager = getSessionManager()
+
+    init {
+        val savedUsername = sessionManager.getSession()
+        if (savedUsername != null) {
+            _uiState.value = _uiState.value.copy(
+                username = savedUsername,
+                isLoggedIn = true
+            )
+        }
+    }
+
     fun onUsernameChange(username: String) {
-        uiState = uiState.copy(username = username, error = null)
+        _uiState.value = _uiState.value.copy(username = username, error = null)
     }
 
     fun onPasswordChange(password: String) {
-        uiState = uiState.copy(password = password, error = null)
+        _uiState.value = _uiState.value.copy(password = password, error = null)
     }
 
     fun onLoginClick() {
-        val username = uiState.username.trim()
-        val enteredPassword = uiState.password
+        val username = _uiState.value.username.trim()
+        val enteredPassword = _uiState.value.password
 
         if (username.isEmpty() || enteredPassword.isEmpty()) {
-            uiState = uiState.copy(error = "El nom d'usuari i la contrasenya són obligatoris.")
+            _uiState.value = _uiState.value.copy(error = "El nom d'usuari i la contrasenya són obligatoris.")
             return
         }
 
-        uiState = uiState.copy(error = null)
+        _uiState.value = _uiState.value.copy(error = null)
 
         viewModelScope.launch {
 
@@ -40,21 +53,28 @@ class LoginViewModel {
 
             if (storedHash != null && storedHash == enteredPassword) {
 
-                uiState = uiState.copy(
+                sessionManager.saveSession(username)
+
+                _uiState.value = _uiState.value.copy(
                     isLoggedIn = true,
                     username = username,
                     error = null
                 )
             } else if (storedHash != null) {
-                uiState = uiState.copy(
+                _uiState.value = _uiState.value.copy(
                     error = "Contrasenya incorrecta per a l'usuari $username."
                 )
             } else {
-                uiState = uiState.copy(
+                _uiState.value = _uiState.value.copy(
                     error = "L'usuari '$username' no està autoritzat o hi ha un error de xarxa."
                 )
             }
         }
+    }
+
+    fun logout() {
+        sessionManager.clearSession()
+        _uiState.value = _uiState.value.copy(isLoggedIn = false)
     }
 }
 
