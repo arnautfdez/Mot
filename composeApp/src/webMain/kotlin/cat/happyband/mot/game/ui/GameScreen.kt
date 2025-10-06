@@ -188,7 +188,7 @@ private fun LetterBox(letter: EvaluatedLetter) {
     val backgroundColor = when (letter.state) {
         LetterState.CORRECT -> Color(0xFF6AAA64)
         LetterState.PRESENT -> Color(0xFFC9B458)
-        LetterState.ABSENT -> MaterialTheme.colorScheme.secondary
+        LetterState.ABSENT -> Color.DarkGray
         LetterState.PENDING -> Color.Transparent
     }
 
