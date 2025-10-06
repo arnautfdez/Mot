@@ -10,14 +10,22 @@ import cat.happyband.mot.game.domain.LetterState
 import cat.happyband.mot.game.domain.evaluateGuess
 import cat.happyband.mot.game.domain.getDailyWord
 import cat.happyband.mot.game.domain.loadWordList
+import cat.happyband.mot.login.data.SessionManager
+import cat.happyband.mot.login.data.getSessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 enum class GameState { PLAYING, WON, LOST }
 
-class GameViewModel(private val currentUsername: String) {
+class GameViewModel(
+    private val currentUsername: String,
+    ) {
+    private val sessionManager = getSessionManager()
+
     var uiState by mutableStateOf(GameUiState())
         private set
 
@@ -47,6 +55,27 @@ class GameViewModel(private val currentUsername: String) {
 
     fun loadInitialGameState() {
         viewModelScope.launch {
+
+            val savedJson = sessionManager.getCurrentGameState()
+            if (savedJson != null && savedJson.isNotEmpty()) {
+
+                // Trobem un joc a mig fer! Deserialitzem la llista de paraules.
+                val restoredGuessesList = Json.decodeFromString<List<String>>(savedJson)
+
+                // Reconstruïm els objectes EvaluatedLetter a partir de les paraules guardades
+                val restoredGuesses = restoredGuessesList.map { word ->
+                    evaluateGuess(word, uiState.solution)
+                }
+
+                // Restaurem l'estat de la UI
+                uiState = uiState.copy(
+                    guesses = restoredGuesses,
+                    keyboardLetterStates = updateKeyboardState(restoredGuesses),
+                    isLoadingGame = false,
+                    // L'estat és PLAYING, ja que el joc encara no ha acabat
+                )
+                return@launch // Sortim de la coroutine, el joc ja està carregat
+            }
 
             val latestResult = repository.getLatestResultForUser(currentUsername)
 
@@ -80,15 +109,11 @@ class GameViewModel(private val currentUsername: String) {
     private fun reconstructGuesses(result: GameResult): List<List<EvaluatedLetter>> {
         // Per evitar errors de compilació, retornarem l'estat final amb el nombre d'intents correctes
         val solution = uiState.solution
-        val numAttempts = result.attempts
+        if (solution.isEmpty()) return emptyList()
 
-        return List(numAttempts) { index ->
-            // Simulem que només l'última fila es completa amb l'estat final (VERD o ABSENT/PRESENT)
-            if (index == numAttempts - 1) {
-                evaluateGuess(solution, solution)
-            } else {
-                List(solution.length) { EvaluatedLetter(' ', LetterState.PENDING) }
-            }
+        return result.guessesList.map { word ->
+            // Per cada paraula guardada, la tornem a avaluar
+            evaluateGuess(word, solution)
         }
     }
 
@@ -118,6 +143,12 @@ class GameViewModel(private val currentUsername: String) {
         val result = evaluateGuess(uiState.currentGuess, uiState.solution)
         val newGuesses = uiState.guesses + listOf(result)
         val newKeyboardState = updateKeyboardState(newGuesses)
+
+        val allSubmittedGuesses = newGuesses.map { it.map { letter -> letter.char }.joinToString("") }
+
+        // Convertim l'estat de la partida en curs (la llista de Strings) a JSON
+        val currentGuessesJson = Json.encodeToString(allSubmittedGuesses)
+        sessionManager.saveCurrentGameState(currentGuessesJson)
 
         val hasWon = result.all { it.state == LetterState.CORRECT }
         val hasLost = newGuesses.size == 6 && !hasWon
@@ -160,8 +191,15 @@ class GameViewModel(private val currentUsername: String) {
 
         if (newGameState == GameState.WON || newGameState == GameState.LOST) {
             println("DEBUG: Entering save block for user ${currentUsername}")
+
+            val allSubmittedGuesses: List<String> = newGuesses.map { evaluatedLetters ->
+                // Ajuntem les lletres avaluades (que són les paraules originals)
+                evaluatedLetters.map { it.char }.joinToString("")
+            }
+
             val gameResult = GameResult(
                 username = currentUsername,
+                guessesList = allSubmittedGuesses,
                 solved = hasWon,
                 attempts = newGuesses.size,
                 score = finalScore,
@@ -172,6 +210,8 @@ class GameViewModel(private val currentUsername: String) {
                 repository.saveGameResult(gameResult)
                 println("INFO: Game result for $currentUsername saved to Supabase.")
             }
+
+            sessionManager.saveCurrentGameState("")
         }
 
         uiState = uiState.copy(

@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class GameResult(
     val id: Int? = null,
     val username: String,
+    val guessesList: List<String>,
     val solved: Boolean,
     val attempts: Int,
     val score: Int,
