@@ -135,6 +135,7 @@ fun GameScreen(username: String, viewModel: GameViewModel) {
                 GameEndDialog(
                     uiState = uiState,
                     onClose = viewModel::hideEndGameDialog,
+                    onGenerateShareText = viewModel::generateShareText,
                 )
             }
         }

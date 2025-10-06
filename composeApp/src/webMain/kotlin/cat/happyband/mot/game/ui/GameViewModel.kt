@@ -29,7 +29,7 @@ class GameViewModel(
     var uiState by mutableStateOf(GameUiState())
         private set
 
-    private val isTimeBonusEnabled = true
+    private val isTimeBonusEnabled = false
     private var startTime: Long = 0
 
     private val repository = GameRepository()
@@ -163,7 +163,7 @@ class GameViewModel(
 
             // 1. PUNTS PER INTENTS (Base 700 punts, recompensa l'eficiència)
             val attemptsUsed = newGuesses.size
-            val scoreAttempts = (7 - attemptsUsed) * 100
+            val scoreAttempts = 7 - attemptsUsed
 
             // 2. BONUS PER VELOCITAT (Màxim 300 punts, Mínim 0)
             val scoreTimeBonus = if (isTimeBonusEnabled) {
@@ -231,6 +231,29 @@ class GameViewModel(
 
     fun markCelebrationComplete() {
         uiState = uiState.copy(celebrationComplete = true)
+    }
+
+    fun generateShareText(): String {
+        val score = uiState.finalScore
+        val attempts = uiState.guesses.size
+        val solved = uiState.gameState == GameState.WON
+
+        val resultText = if (solved) "🏆Mot ENCERTAT en $attempts intents! 🏆" else "❌Mot NO ENCERTAT ❌"
+
+        val grid = uiState.guesses.joinToString("\n") { guess ->
+            guess.joinToString("") { letter ->
+                when (letter.state) {
+                    LetterState.CORRECT -> "🟩"
+                    LetterState.PRESENT -> "🟨"
+                    LetterState.ABSENT -> "⬛"
+                    LetterState.PENDING -> "⬜"
+                }
+            }
+        }
+
+        return "$resultText\n" +
+                "Puntuació: $score\n\n" +
+                "$grid\n\n"
     }
 
     private fun updateKeyboardState(guesses: List<List<EvaluatedLetter>>): Map<Char, LetterState> {

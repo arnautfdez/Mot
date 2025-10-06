@@ -9,11 +9,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cat.happyband.mot.utils.shareResult
 
 @Composable
 fun GameEndDialog(
     uiState: GameUiState,
     onClose: () -> Unit,
+    onGenerateShareText: () -> String,
 ) {
     val isWon = uiState.gameState == GameState.WON
 
@@ -21,10 +23,9 @@ fun GameEndDialog(
         onDismissRequest = onClose,
 
         title = {
-            Text(
-                text = if (isWon) "VICTÒRIA!" else "PARTIDA ACABADA",
-            )
+            Text(text = if (isWon) "VICTÒRIA!" else "PARTIDA ACABADA")
         },
+
         text = {
             Column {
                 if (isWon) {
@@ -42,6 +43,17 @@ fun GameEndDialog(
             Button(onClick = onClose) {
                 Text("TANCAR")
             }
+        },
+        dismissButton = {
+            Button(
+                onClick = {
+                    val textToShare = onGenerateShareText()
+                    shareResult(textToShare)
+                }
+            ) {
+                Text("Compartir Resultat (WhatsApp)")
+            }
         }
+        // ----------------------------------------------------
     )
 }
