@@ -6,7 +6,7 @@ import kotlinx.datetime.toLocalDateTime
 import mot.composeapp.generated.resources.Res
 
 suspend fun loadWordList(): List<String> {
-    val rawTextBytes = Res.readBytes("files/paraules5.txt")
+    val rawTextBytes = Res.readBytes("files/PARAULES_5_SENSE_ACCENTS.txt")
     val text = rawTextBytes.decodeToString()
     return text.split("\n")
 }
